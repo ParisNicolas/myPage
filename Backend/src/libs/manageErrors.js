@@ -2,7 +2,7 @@ const logError = require('./logger').error;
 
 const tryCatch = (controller, errMessage) => async(req, res, next) => {
   try{
-    await controller(req, res);
+    await controller(req, res, next);
   }
   catch(err){
     logError(errMessage, {req, err});

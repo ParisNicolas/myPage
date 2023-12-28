@@ -2,8 +2,10 @@ const {appendFile} = require("fs");
 const path = require("path");
 const dayjs = require('dayjs');
 
-const warningLogPath = path.join(global.storagePath, '/logs/warn.log');
-const logPath = path.join(global.storagePath, '/logs/all.log');
+const { logPath } = require("../config");
+
+const warningLogPath = path.join(logPath, '/warn.log');
+const loggerPath = path.join(logPath, '/all.log');
 
 class logger {
     static reset = '\x1b[0m';
@@ -70,7 +72,7 @@ class logger {
         }
     }
 
-    static log(level, message, data){
+    static log(level, message, data = {}){
         const {prefix, color, levelN, isImportant} = this.levels[level.toLowerCase()];
 
         if(this.levelShow <= levelN){
@@ -97,14 +99,14 @@ class logger {
             if(isImportant){
                 appendFile(warningLogPath, '\n'+ messageFile + (data.err ? data.err+'\n':''), errFunc);
             }
-            appendFile(logPath, messageFile, errFunc);
+            appendFile(loggerPath, messageFile, errFunc);
         }
     } 
 
     //Put enter between request
     static logEnter(){
         console.log();
-        appendFile(logPath, '\n', errFunc);
+        appendFile(loggerPath, '\n', errFunc);
     }
 
     //Static methods

@@ -1,11 +1,9 @@
 const { Router } = require('express');
-const multer = require('multer');
 const path = require('path');
-const increment = require('add-filename-increment');
 const router = Router();
 
-const allowedPath = path.join(global.storagePath, '/storage');
-
+const { verifyToken } = require('../middlewares/authJwt');
+const { upload, allowedPath } = require('../config');
 const { 
     getContent, 
     getDetails, 
@@ -13,56 +11,41 @@ const {
     uploadFile, 
     deleteFile, 
     createFolder, 
-    renameFile 
+    renameFile,
+    seeFamilyCarpets
 } = require('../controllers/storage.controler'); 
-
-
-// Settings to store files on disk
-const storage = multer.diskStorage({
-    //Route where the file will be saved
-    destination: (req, file, cb) => {
-      cb(null, path.join(allowedPath, req.params.path));
-    },
-    //Name with which it will be saved
-    filename: (req, file, cb) => {
-      const pathFile = path.join(allowedPath, req.params.path, file.originalname);
-      cb(null, increment.file({path: pathFile}, {platform: 'win32', fs: true}).base);
-    }
-});
-const upload = multer({storage: storage});
 
 
 //Security to avoid routes outside the main path
 router.param('path', (req, res, next, parameter)=>{
-    const fileRoute = path.join(allowedPath, parameter || '');
-    if(!fileRoute.startsWith(allowedPath)){
-        return res.status(403).send('Acceso no autorizado a esta ruta.');
+    const mainPath = path.join(allowedPath, req.params.userFolder)
+    const fileRoute = path.join(mainPath, parameter || '');
+    if(!fileRoute.startsWith(mainPath)){
+        return res.status(403).json({message: 'Acceso restringido a esta ruta'});
     }
     next();
 })
 
+//Only for family authenticated
+router.use(verifyToken('family'));
+
+router.param('userFolder', (req, res, next, folder)=>{
+  if(folder === 'shared') next();
+  else if(req.roles.includes('admin')) next();
+  else if(req.username.toLowerCase() === folder) next();
+  else return res.status(401).json({message:'No tienes permiso para acceder a esta carpeta'})
+})
+
 router.get('/', (req, res) => res.redirect('/storage/files/'));
 
-//See folders or file content
-router.get('/files/:path(*)?', getContent);
-
-//Get info of a file
-router.get('/details/:path(*)?', getDetails);
-
-//Dowload Files
-router.get('/dowload/:path(*)', dowloadFile);
-
-//Upload Files
-router.post('/upload/:path(*)?',upload.single('file'), uploadFile);
-
-//Delete Files
-router.delete('/delete/:path(*)', deleteFile);
-
-//Create Folder
-router.post('/folder/:path(*)?', createFolder);
-
-//Rename Files
-router.patch('/rename/:path(*)', renameFile);
+router.get('/files', seeFamilyCarpets);
+router.get('/files/:userFolder/:path(*)?',getContent);
+router.get('/details/:userFolder/:path(*)?', getDetails);
+router.get('/dowload/:userFolder/:path(*)', dowloadFile);
+router.post('/upload/:userFolder/:path(*)?',upload.single('file'), uploadFile);
+router.delete('/delete/:userFolder/:path(*)', deleteFile);
+router.post('/folder/:userFolder/:path(*)?', createFolder);
+router.patch('/rename/:userFolder/:path(*)', renameFile);
 
 
 module.exports = router;

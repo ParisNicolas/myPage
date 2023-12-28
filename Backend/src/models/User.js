@@ -25,6 +25,6 @@ userSchema.statics.comparePassword = async (password, receivedPassword) => {
     return bcrypt.compare(password, receivedPassword);
 }
 
-const User = mongoose.model("Post", userSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

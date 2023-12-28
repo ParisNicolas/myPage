@@ -1,22 +1,37 @@
 const fs = require('fs').promises;
 const path = require('path');
 const archiver = require('archiver');
+const mime = require('mime-types');
 
-const thumbnail = require('../models/Thumbnail');
+const { allowedPath, guestFolder, familyFolders } = require('../config');
+const Thumbnail = require('../models/Thumbnail');
 const { tryCatch, serverError } = require('../libs/manageErrors');
+
 const logger = require('../libs/logger');
-const {getMimeType, getThumbnail} = require('../libs/image_control');
-
-
-const allowedPath = path.join(global.storagePath, '/storage');
 logger.type = 'STORAGE';
+
+
+//Get basename of a mime-type from file
+function getMimeType(file){
+    const mimeType = mime.lookup(file);
+    if (mimeType) return mimeType.split('/')[0];
+    else return 'unknown';
+}
+
+exports.seeFamilyCarpets = (req, res) => {
+    const elements = [
+        path.basename(guestFolder), 
+        ...familyFolders.map((c)=>path.basename(c))
+    ];
+    res.status(200).json({files: [], folders: elements});
+}
 
 
 //See folders or file content
 exports.getContent = tryCatch(async (req, res) => {
 
     //Get path and stats
-    const fileRoute = path.join(allowedPath, req.params.path || '/');
+    const fileRoute = path.join(allowedPath, req.params.userFolder, req.params.path || '/');
     const stats = await fs.stat(fileRoute);
 
     //Send file or see folder content
@@ -41,7 +56,7 @@ exports.getContent = tryCatch(async (req, res) => {
 
                 //Obtain image thumnailName 
                 if(file.type === "image"){
-                    const document = await thumbnail.findOne({originalPath: path.join(fileRoute, f.name)}, "thumbnailName");
+                    const document = await Thumbnail.findOne({originalPath: path.join(fileRoute, f.name)}, "thumbnailName");
                     if(document) file.thumbnail = document.thumbnailName;
                     else {
                         logger.warn('Miniatura no encontrada en BD para: '+f.name, {req});
@@ -63,7 +78,7 @@ exports.getContent = tryCatch(async (req, res) => {
 //Faltaria tal vez mostrar el tamaño en kb o mb y talvez mostrar metadatos de imagenes
 exports.getDetails = tryCatch(async (req, res) => {
 
-    const fileRoute = path.join(allowedPath, req.params.path || '');
+    const fileRoute = path.join(allowedPath, req.params.userFolder, req.params.path || '');
     const stats = await fs.stat(fileRoute);
 
     const metadata = {
@@ -85,7 +100,7 @@ exports.getDetails = tryCatch(async (req, res) => {
 //Dowload Files
 exports.dowloadFile = tryCatch(async (req, res) => {
 
-    const fileRoute = path.join(allowedPath, req.params.path || '');
+    const fileRoute = path.join(allowedPath, req.params.userFolder, req.params.path || '');
     const stats = await fs.stat(fileRoute);
 
     if(stats.isFile()){
@@ -109,11 +124,11 @@ exports.uploadFile = tryCatch(async (req, res) => {
 
     //Create a thumnail and save it in database
     if(req.file.mimetype.startsWith('image')){
-        newPath = await getThumbnail(req.file.path, req.file.filename); //Create thumbnail
+        newPath = await Thumbnail.getThumbnail(req.file.path, req.file.filename); //Create thumbnail
         logger.created('Miniatura creada: ' + newPath.name);
 
         //Save thumbnail in database
-        const newThumbnail = new thumbnail({
+        const newThumbnail = new Thumbnail({
             originalPath: req.file.path, 
             thumbnailPath: newPath.dest, 
             thumbnailName: newPath.name
@@ -123,19 +138,19 @@ exports.uploadFile = tryCatch(async (req, res) => {
         logger.created('Nuevo documento en mongoDB: '+id);
     }
     
-    res.status(201).send('Archivo subido exitosamente');
+    res.status(201).json({message: 'Archivo subido exitosamente'});
 }, 'Error al cargar archivo');
 
 
 
 //Delete Files
 exports.deleteFile = tryCatch(async (req, res) => {
-    const fileRoute = path.join(allowedPath, req.params.path || '/');
+    const fileRoute = path.join(allowedPath, req.params.userFolder, req.params.path || '/');
     const stats = await fs.stat(fileRoute);
 
     if(stats.isFile()){
         if(getMimeType(fileRoute) === 'image'){
-            const image = await thumbnail.findOneAndDelete({originalPath: fileRoute});
+            const image = await Thumbnail.findOneAndDelete({originalPath: fileRoute});
 
             if(image){
                 logger.removed(`Borrando ${image.thumbnailName} para ${req.params.path} de la base de datos`, {req});
@@ -153,13 +168,13 @@ exports.deleteFile = tryCatch(async (req, res) => {
         try{
             fs.unlink(fileRoute);
             logger.removed('Archivo borrado: '+ req.params.path);
-            res.status(200).send('Archivo borrado exitosamente');
+            res.status(200).json({message:'Archivo borrado exitosamente'});
         }catch(err){
             throw new serverError('Error al eliminar el archivo'+ err, 500);
         }
     }
     else{
-         res.send('Eliminar carpetas aun no disponible')
+         res.status(503).json({message: 'Eliminar carpetas aun no disponible'})
     }
 }, 'Error al borrar el archivo');
 
@@ -167,11 +182,11 @@ exports.deleteFile = tryCatch(async (req, res) => {
 
 //Create Folder
 exports.createFolder = tryCatch(async (req, res) => {
-    const folderRoute = path.join(allowedPath, req.params.path || '/');
+    const folderRoute = path.join(allowedPath, req.params.userFolder, req.params.path || '/');
     
     await fs.mkdir(folderRoute);
     logger.created('Nueva carpeta: '+req.params.path, {req});
-    res.status(200).send('Carpeta creada');
+    res.status(201).json({message: 'Carpeta creada'});
 
 }, 'Error al crear la carpeta');
 
@@ -179,14 +194,14 @@ exports.createFolder = tryCatch(async (req, res) => {
 
 //Rename Files
 exports.renameFile = tryCatch(async (req, res) => {
-    const fileRoute = path.join(allowedPath, req.params.path || '/');
+    const fileRoute = path.join(allowedPath, req.params.userFolder, req.params.path || '/');
     let newPath;
 
     //Check file extension
     const regex = /\.[^.]+$/;
     if(regex.test(req.body.newName)){
         if(path.extname(fileRoute) != path.extname(req.body.newName)){
-            return res.status(400).send("You can't change extension of a file");
+            return res.status(400).json({message: "You can't change extension of a file"});
         }
         newPath = path.join(path.dirname(fileRoute), req.body.newName);
     }else{
@@ -196,7 +211,7 @@ exports.renameFile = tryCatch(async (req, res) => {
     //Update path in database
     if(getMimeType(req.params.path) === 'image'){
         //Falta comprovar que todo funcione aca
-        const updated = await thumbnail.updateOne({originalPath: fileRoute}, {originalPath: newPath});
+        const updated = await Thumbnail.updateOne({originalPath: fileRoute}, {originalPath: newPath});
         if(!updated.matchedCount){
             logger.warn('Miniatura no encontrada en BD para: '+req.params.path);
         }
@@ -205,6 +220,6 @@ exports.renameFile = tryCatch(async (req, res) => {
     //rename file
     await fs.rename(fileRoute, newPath);
     logger.modified(`Archivo renombrado: ${req.params.path} --> ${req.body.newName}`, {req});
-    res.status(200).send('Archivo renombrado');
+    res.status(200).json({message: 'Archivo renombrado'});
 
 }, 'Error al renombrar');
