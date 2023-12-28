@@ -42,3 +42,23 @@ Dentro del servidor puedes configurar algunos parametros:
  7. **Family**: Lista de nombres de usuario de familiares (accesos especiales)
 
 > Esta configuracion puede variar con el tiempo
+
+## Documentacion
+
+### Rutas:
+
+| Ruta                                | Método HTTP | Descripción                                |
+|-------------------------------------|-------------|--------------------------------------------|
+| `/`      			                  | GET         | Envia un  ok.                              |
+| `/check`      			          | GET         | Testeo de token.                           |
+| `/signUp`                           | POST        | Logearse con un usuario.                   |
+| `/signIn`                           | POST        | Registra un nuevo usuario.                 |
+| `/deleteUser/:username`             | DELETE      | Elimina un usuario.                        |
+| `/storage/files`                    | GET         | Muestra las carpetas disponibles           |
+| `/storage/files/:folder/:path(*)?`  | GET         | Obtiene el contenido de una ruta.          |
+| `/storage/details/:folder/:path(*)?`| GET         | Obtiene detalles de un archivo/carpeta.    |
+| `/storage/dowload/:folder/:path(*)` | GET         | Descarga un archivo/carpeta.               |
+| `/storage/upload/:folder/:path(*)?` | POST        | Sube un archivo en la ruta especificada.   |
+| `/storage/delete/:folder/:path(*)`  | DELETE      | Elimina un archivo/carpeta.                |
+| `/storage/folder/:folder/:path(*)?` | POST        | Crea una carpeta en la ruta especificada.  |
+| `/storage/rename/:folder/:path(*)`  | PATCH       | Renombra un archivo/carpeta.               |
