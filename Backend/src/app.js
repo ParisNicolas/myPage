@@ -8,7 +8,7 @@ const app = express();
 const errorHandler = require("./middlewares/errorHandler");
 const storageRouter = require("./routes/storage");
 const authRouter = require("./routes/auth");
-const gameRouter = require("./routes/games");
+const utilityRouter = require("./routes/utils");
 
 // Middlewares
 app.use(morgan('dev'));
@@ -21,7 +21,7 @@ app.use((req,res,next)=>{console.log();next()}); //Print enter in console
 app.get("/", (req, res)=>res.send("Ok"))
 app.use("/storage", storageRouter);
 app.use("/", authRouter);
-app.use("/games", gameRouter)
+app.use("/utils", utilityRouter)
 
 //Error
 app.use(errorHandler);

@@ -9,6 +9,7 @@ Ademas de funcionar como un servidor multiuso para el hogar.
  - Portafolio personal
  - Servidor para juego online
 
+
 ## Tecnologias
 
 ###  Frontend | Client Side
@@ -20,6 +21,7 @@ Ademas de funcionar como un servidor multiuso para el hogar.
  - Express
  - JWT
  - MongoDB
+
 
 ## Configuracion
 Dentro del servidor puedes configurar algunos parametros:
@@ -43,6 +45,7 @@ Dentro del servidor puedes configurar algunos parametros:
 
 > Esta configuracion puede variar con el tiempo
 
+
 ## Documentacion
 
 ### Rutas:
@@ -62,3 +65,31 @@ Dentro del servidor puedes configurar algunos parametros:
 | `/storage/delete/:folder/:path(*)`  | DELETE      | Elimina un archivo/carpeta.                |
 | `/storage/folder/:folder/:path(*)?` | POST        | Crea una carpeta en la ruta especificada.  |
 | `/storage/rename/:folder/:path(*)`  | PATCH       | Renombra un archivo/carpeta.               |
+
+### signUp:
+**Body:**
+`{"username": "Carlos", "password":"123"}`
+
+**Error Responses:**
+`{"message":"El nombre no puede ser mayor que 20 caracteres"}`
+`{"message":"La contraseña no puede ser menor que 4 caracteres"}`
+`{"message":"La contraseña no puede ser mayor que 20 caracteres"}`
+`{"message":"La contraseña no puede contener espacios"}`
+`{"message":  "El usuario ya existe"}`
+
+**Successful Response:**
+`{"token": "token here ..."}`
+
+### signIn:
+**Body:**
+`{"username": "Carlos", "password":"123"}`
+
+**Error Responses:**
+`{message:  "Contraseña incorrecta para: "+username}`
+`{message:  "Usuario no encontrado"}`
+`{message:  "Contraseña incorrecta"}`
+`{"message":"La contraseña no puede contener espacios"}`
+`{"message":  "El usuario ya existe"}`
+
+**Successful Response:**
+`{"token": "token here ..."}`
