@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> Falta desarollo en el Frontend. Principalmente para manejar los archivos
+
+
 # Bienvenidos a mi pagina
 Esta pagina tiene com objetivo recopilar mis conocimientos hacerca de Full Stack Web Developer.
 Ademas de funcionar como un servidor multiuso para el hogar.
@@ -15,6 +19,8 @@ Ademas de funcionar como un servidor multiuso para el hogar.
 ###  Frontend | Client Side
  - React
  - Bootstrap
+ - Framer Motion
+ - Font Awesome
 
 ###  Backend | Server
  - Node.js
@@ -71,11 +77,13 @@ Dentro del servidor puedes configurar algunos parametros:
 `{"username": "Carlos", "password":"123"}`
 
 **Error Responses:**
-`{"message":"El nombre no puede ser mayor que 20 caracteres"}`
-`{"message":"La contraseña no puede ser menor que 4 caracteres"}`
-`{"message":"La contraseña no puede ser mayor que 20 caracteres"}`
-`{"message":"La contraseña no puede contener espacios"}`
-`{"message":  "El usuario ya existe"}`
+```
+{"message": "El nombre no puede ser mayor que 20 caracteres"}
+{"message": "La contraseña no puede ser menor que 4 caracteres"}
+{"message": "La contraseña no puede ser mayor que 20 caracteres"}
+{"message": "La contraseña no puede contener espacios"}
+{"message": "El usuario ya existe"}
+```
 
 **Successful Response:**
 `{"token": "token here ..."}`
@@ -85,11 +93,11 @@ Dentro del servidor puedes configurar algunos parametros:
 `{"username": "Carlos", "password":"123"}`
 
 **Error Responses:**
-`{message:  "Contraseña incorrecta para: "+username}`
-`{message:  "Usuario no encontrado"}`
-`{message:  "Contraseña incorrecta"}`
-`{"message":"La contraseña no puede contener espacios"}`
-`{"message":  "El usuario ya existe"}`
+```
+{"message": "Contraseña incorrecta para: "+username}
+{"message": "Usuario no encontrado"}
+{"message": "Contraseña incorrecta"}
+```
 
 **Successful Response:**
 `{"token": "token here ..."}`
