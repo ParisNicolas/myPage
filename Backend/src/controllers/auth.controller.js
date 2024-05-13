@@ -44,7 +44,7 @@ exports.signIn = async (req, res) => {
     logger.auth(`Usuario logeado: ${username}`, {req});
     console.log(userFound, req.roles);
     
-    res.status(200).json({token});
+    res.status(200).json({token, username, roles: req.roles});
 };
 
 exports.deleteUser = async (req, res) => {

@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { signIn, signUp, deleteUser } = require('../controllers/auth.controller');
+const { familyMembers } = require('../config');
 const { 
     checkDuplicateUser, 
     verifyToken, 
@@ -9,6 +10,7 @@ const {
 
 const router = Router();
 
+router.get('/getFamily', (req, res)=>res.json({family: familyMembers}));
 router.post('/signUp', [checkLegalityOfData, checkDuplicateUser], signUp);
 router.post('/signIn', checkFamilyPrivileges, signIn);
 router.delete('/deleteUser/:username', verifyToken('admin'), deleteUser);
